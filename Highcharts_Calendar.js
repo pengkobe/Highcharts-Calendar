@@ -1,5 +1,7 @@
-﻿
-//趋势线插件
+﻿/*
+author:pengkobe
+crete at:2015-05-20
+*/
 (function ($) {
     $.fn.extend({
         CalendarPlugin: function (options) {
@@ -17,7 +19,7 @@
             //render
             InitChart();
             //config tooltips
-            setTooltips();
+            SetTooltips();
             //Initial events
             BindEvents();
 
@@ -54,7 +56,7 @@
                                     rects[i].destroy(); //destroy it when heatmap redraw
                                 }
                                 rects = [];
-                                drawCalendarRec(rects, this);
+                                DrawCalendarRec(rects, this);
                             }
                         }
                     },
@@ -107,7 +109,7 @@
                 });
             }
 
-            function drawCalendarRec(rects, chart) {
+            function DrawCalendarRec(rects, chart) {
                 if (chart.renderer.forExport) {
                     proceed.call(chart);
                 } else {
@@ -159,11 +161,11 @@
 
             function BindEvents() {
                 $('#dashBoarderCalendar_before').on('click', function () {//before
-                    changeMonth('B')
+                    ChangeMonth('B')
                 });
 
                 $('#DashBoarderCalendar_next').on('click', function () { //next
-                    changeMonth('N')
+                    ChangeMonth('N')
                 });
 
                 $('#CalendarTitle_Dash').on('click', function () {
@@ -171,48 +173,48 @@
                 });
             }
 
-            function changeMonth(type) {
+            function ChangeMonth(type) {
                 var daystr = $(TitleSelector).html();
                 var str = '';
                 if (type == 'B') {
                     month_relative--;
                     var dateFormate = daystr.replace(/\//g, "-") + '-1';
-                    str = gotoMonth('B', dateFormate);
+                    str = GetMonthStr('B', dateFormate);
                 }
 
                 if (type == 'N') {
                     month_relative++;
                     var dateFormate = daystr.replace(/\//g, "-") + '-1';
-                    str = gotoMonth('N', dateFormate);
+                    str = GetMonthStr('N', dateFormate);
                 }
 
-                setTooltips();
+                SetTooltips();
 
 
                 $(TitleSelector).empty();
                 $(TitleSelector).append('' + str);
             }
 
-            function setTooltips() {
+            function SetTooltips() {
                 var data = new Array();
-                var datenow = getCurrentMonthLastDay(month_relative);
-                var month = datenow.getMonth(); //实际月-1
+                var datenow = GetCurrentMonthLastDay(month_relative);
+                var month = datenow.getMonth(); //current month
 
-                var today = new Date().getDate(); //今日
+                var today = new Date().getDate(); //today
 
-                var date = new Date(datenow.getTime() - ((datenow.getDate() - 2) * 24 * 60 * 60 * 1000)); //获取当月第一天
+                var date = new Date(datenow.getTime() - ((datenow.getDate() - 2) * 24 * 60 * 60 * 1000)); //first day of current month
 
-                var week = (date.getDay() == 0 ? 7 : date.getDay()) - 1; //获取月第一天星期
+                var week = (date.getDay() == 0 ? 7 : date.getDay()) - 1; //the week num of first day of current month
 
-                var milli = date.getTime(); //月第一天转化为毫秒数
+                var milli = date.getTime(); //change to milliseconds
 
-                date = new Date(milli - (week * 24 * 60 * 60 * 1000));//日历控件上显示的第一天
+                date = new Date(milli - (week * 24 * 60 * 60 * 1000));//the first day show on calendar
                 milli = date.getTime();
 
-                //求出显示的格子数
-                var MonthdayNum = getCurrentMonthLastDay(month_relative).getDate();
+                //box num 
+                var MonthdayNum = GetCurrentMonthLastDay(month_relative).getDate();
                
-                //格子数
+                //default box num
                 var RenderNum = 35;
 
                 if ((week == 6 && MonthdayNum == 31) || (week == 7 && MonthdayNum > 29)) {
@@ -220,28 +222,25 @@
                 }
 
                 var showinfo = "";
-                var datavalue = 0;
 
                 for (var i = 0; i < RenderNum; i++) {
-
                     if (date.getMonth() != month) {
                         data.push({
                             name: date.getMonth() + 1 + "-" + date.getDate(),
                             showinfo: '123',
                             isToday: false,
-                            y: 7 - Math.floor(i / 7),//需要逆转
+                            y: 7 - Math.floor(i / 7),//reverse
                             x: date.getDay() == 0 ? 6 : date.getDay() - 1,
                             value: 0,
                             dataLabels: { enabled: false }
                         });
                     } else {
-                        if (date.getDate() == today && date.getMonth() == (new Date().getMonth())) {//今日格子
+                        if (date.getDate() == today && date.getMonth() == (new Date().getMonth())) {//today
                             data.push({
                                 name: date.getDate(),
                                 isToday: true,
                                 datet: date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate(),
                                 y: 7 - Math.floor(i / 7), x: date.getDay() == 0 ? 6 : date.getDay() - 1,
-                                value: datavalue,
                                 showinfo: '',
                                 dataLabels: {
                                     enabled: true,
@@ -255,7 +254,6 @@
                                 isToday: false,
                                 datet: date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate(),
                                 y: 7 - Math.floor(i / 7), x: date.getDay() == 0 ? 6 : date.getDay() - 1,
-                                value: datavalue,
                                 showinfo: '',
                                 dataLabels: {
                                     enabled: true,
@@ -266,18 +264,16 @@
 
                         }
                     }
-                    milli = milli + (1 * 24 * 60 * 60 * 1000);//下一天
+                    milli = milli + (1 * 24 * 60 * 60 * 1000);//next
                     date = new Date(milli);
                 }
 
                 var chart = $(Selector).highcharts();
-
                 var seriesnum = chart.series.length;
                 //remove series
                 for (var i = 0; i < seriesnum; i++) {
                     chart.series[0].remove();
                 }
-         
                 //add new series
                 chart.addSeries({
                     dataLabels: {
@@ -294,8 +290,8 @@
                 });
             }
 
-            //change month
-            function gotoMonth(type, currentTime) {
+            //get month string
+            function GetMonthStr(type, currentTime) {
                 var numberOfValue = currentTime.split("-");
                 var month = parseInt(numberOfValue[1]);
                 if (type == 'N') {
@@ -317,15 +313,12 @@
             }
 
             //get last day of  current month 
-            function getCurrentMonthLastDay(relativeobj) {
+            function GetCurrentMonthLastDay(relativeobj) {
                 var current = new Date();
                 var currentMonth = current.getMonth();
                 var nextMonth = ++currentMonth + relativeobj;
-
                 var nextMonthDayOne = new Date(current.getFullYear(), nextMonth, 1);
-
                 var minusDate = 1000 * 60 * 60 * 24;
-
                 return new Date(nextMonthDayOne.getTime() - minusDate);
             }
         }
